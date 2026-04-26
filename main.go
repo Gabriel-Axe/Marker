@@ -1,7 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func main() {
-	fmt.Printf("hello, Go!")
+	for _, arg := range(os.Args) {
+		fmt.Println(arg)
+	}
+	// if len(os.Args) < 2 {
+	// 	fmt.Println("no lol")
+	// 	return
+	// }
+	// fmt.Println("yes")
 }
