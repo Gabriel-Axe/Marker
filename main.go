@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,36 +14,54 @@ func main() {
 		fmt.Printf("Could not get current directory: %v", err)
 	}
 
-	if len(os.Args) != 3 {
-		fmt.Println("usage: k <path/to/template> <name>")
-		return
+	// markTemplate := flag.NewFlagSet("marktemplate", flag.ExitOnError)
+	// openEditor := flag.Bool("open", false, "open the new note on the $VISUAL or $EDITOR editor")
+
+	flag.Parse()
+	args := flag.Args()
+
+	// for _, arg := range (args) {
+	// 	fmt.Println(arg)
+	// }
+	// fmt.Println(args)
+	// if len(os.Args) != 2 {
+	if len(args) < 2 || len(args) > 3 {
+		fmt.Printf("usage: k <path/to/template> <name> [-open], number of args: %d\n", len(args))
+		os.Exit(1)
 	}
 
-	// templatePath := os.Args[1]
+	templatePath := os.Args[1]
 	newNoteName := os.Args[2]
+	var open bool = true
 
 	newNotePath := cwd + "/" + newNoteName + ".md"
 	fmt.Println(newNotePath)
 
-	// err = createFileFromTemplate(templatePath, newNoteName)
-	// if err != nil {
-	// 	fmt.Printf("Could not create file: %v", err)
-	// }
-
-	editor := os.Getenv("VISUAL")
-	if editor == "" {
-		editor = os.Getenv("EDITOR")
-	}
-	if editor == "" {
-		editor = "vi"
+	err = createFileFromTemplate(templatePath, newNotePath)
+	if err != nil {
+		fmt.Printf("Could not create file: %v", err)
 	}
 
-	cmd := exec.Command(editor, )
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	print(open)
+	if open == true {
+		editor := os.Getenv("VISUAL")
+		if editor == "" {
+			editor = os.Getenv("EDITOR")
+		}
+		if editor == "" {
+			editor = "vi"
+		}
 
-	// cmd.Run()
+		cmd := exec.Command(editor, newNotePath)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err = cmd.Run()
+		if err != nil {
+			fmt.Printf("Could not open editor: %v", err)
+		}
+	}
 }
 
 func createFileFromTemplate(templatePath, newPath string) error {
