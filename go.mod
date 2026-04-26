@@ -1,3 +1,3 @@
-module mark-templater
+module marker
 
 go 1.26.2
