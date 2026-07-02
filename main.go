@@ -14,17 +14,9 @@ func main() {
 		fmt.Printf("Could not get current directory: %v", err)
 	}
 
-	// markTemplate := flag.NewFlagSet("marktemplate", flag.ExitOnError)
-	// openEditor := flag.Bool("open", false, "open the new note on the $VISUAL or $EDITOR editor")
-
 	flag.Parse()
 	args := flag.Args()
 
-	// for _, arg := range (args) {
-	// 	fmt.Println(arg)
-	// }
-	// fmt.Println(args)
-	// if len(os.Args) != 2 {
 	if len(args) < 2 || len(args) > 3 {
 		fmt.Printf("usage: k <path/to/template> <name> [-open], number of args: %d\n", len(args))
 		os.Exit(1)
