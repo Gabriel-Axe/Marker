@@ -8,12 +8,23 @@ import (
 	"strings"
 )
 
+type Config struct {
+	TemplatesDir string
+	NotesDir string
+	// Editor string
+}
+type Flags struct {
+	TemplatePath string
+	NoteName string
+	OpenEditor bool
+}
+
 type Template struct {
-	Path string
+	Path Path
 }
 
 type Note struct {
-	Path string
+	Path Path
 	Name string
 }
 
