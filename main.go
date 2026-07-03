@@ -35,23 +35,27 @@ func main() {
 		fmt.Printf("Could not get current directory: %v", err)
 	}
 
-	template, name := parseFlags()
+	mflags := parseFlags()
+	notePath := cwd + "/" + mflags.NoteName
+	note := createNoteStruct(mflags.NoteName, notePath)
 
-	newNotePath := cwd + "/" + newNoteName + ".md"
-	fmt.Println(newNotePath)
-
-	if strings.HasSuffix(name, ".md") {
-		name = strings.TrimSuffix(name, ".md")
-		print(name)
-	}
+	templatePath := Path{ mflags.TemplatePath }
+	template := Template{ Path: templatePath }
 
 	err = createFileFromTemplate(template, newNotePath)
 	if err != nil {
 		fmt.Printf("Could not create file: %v", err)
 	}
+}
 
-	print(open)
-	if open == true {
+func createFlagStruct(templatePath string, noteName string, openEditor bool) *Flags {
+
+	return &Flags {
+		TemplatePath : templatePath,
+		NoteName : noteName,
+		OpenEditor : openEditor,
+	}
+}
 		editor := os.Getenv("VISUAL")
 		if editor == "" {
 			editor = os.Getenv("EDITOR")
@@ -75,15 +79,17 @@ func main() {
 // Returns a struct rerpresenting a template and the name of the new note
 func parseFlags() (Template, string) {
 	flag.Parse()
-	args := flag.Args()
 
-	if len(args) < 2 || len(args) > 3 {
-		fmt.Printf("usage: k <path/to/template> <name> [-open], number of args: %d\n", len(args))
+	if *templatePath == "" || *noteName == "" {
+		printDefaultCommandCall()
 		os.Exit(1)
 	}
 
-	template := Template { Path: os.Args[1] }
-	newNoteName := os.Args[2]
+	return Flags {
+		TemplatePath: *templatePath,
+		NoteName: *noteName,
+		OpenEditor: *open,
+	}
 
 	return template, newNoteName
 }
