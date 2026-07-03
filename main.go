@@ -42,7 +42,7 @@ func main() {
 	templatePath := Path{ mflags.TemplatePath }
 	template := Template{ Path: templatePath }
 
-	err = createFileFromTemplate(template, newNotePath)
+	err = createFileFromTemplate(template, *note)
 	if err != nil {
 		fmt.Printf("Could not create file: %v", err)
 	}
@@ -91,14 +91,26 @@ func parseFlags() (Template, string) {
 		OpenEditor: *open,
 	}
 
-	return template, newNoteName
+	return path
 }
 
-func createFileFromTemplate(template Template, newPath string) error {
-	data, err := os.ReadFile(template.Path)
+func createFileFromTemplate(template Template, note Note) error {
+	data, err := os.ReadFile(template.Path.URI)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(newPath, data, 0644)
+	path := note.Path.URI
+
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		if os.IsExist(err) {
+			return fmt.Errorf("file %s already exists", path)
+		}
+	}
+
+	defer f.Close()
+	_, err = f.Write(data)
+	return err
+}
 }
