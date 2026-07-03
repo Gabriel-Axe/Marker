@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	// "path"
+	"path/filepath"
 	"strings"
 )
 
@@ -28,8 +31,11 @@ type Note struct {
 	Name string
 }
 
-func main() {
+type Path struct {
+	URI string
+}
 
+func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("Could not get current directory: %v", err)
@@ -39,6 +45,7 @@ func main() {
 	notePath := cwd + "/" + mflags.NoteName
 	note := createNoteStruct(mflags.NoteName, notePath)
 
+	defer executeEditor(mflags, note)
 	templatePath := Path{ mflags.TemplatePath }
 	template := Template{ Path: templatePath }
 
@@ -56,6 +63,9 @@ func createFlagStruct(templatePath string, noteName string, openEditor bool) *Fl
 		OpenEditor : openEditor,
 	}
 }
+
+func executeEditor(mflags Flags, note *Note) error {
+	if mflags.OpenEditor {
 		editor := os.Getenv("VISUAL")
 		if editor == "" {
 			editor = os.Getenv("EDITOR")
@@ -64,20 +74,29 @@ func createFlagStruct(templatePath string, noteName string, openEditor bool) *Fl
 			editor = "vi"
 		}
 
-		cmd := exec.Command(editor, newNotePath)
+		cmd := exec.Command(editor, note.Path.URI)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		err = cmd.Run()
+		err := cmd.Run()
 		if err != nil {
-			fmt.Printf("Could not open editor: %v", err)
+			return fmt.Errorf("Could not open editor: %v", err)
 		}
 	}
+	return nil
+}
+
+func printDefaultCommandCall() {
+	fmt.Println("usage: k -template <path> <path> -name <name> [-open]")
 }
 
 // Returns a struct rerpresenting a template and the name of the new note
-func parseFlags() (Template, string) {
+func parseFlags() Flags {
+	templatePath := flag.String("template", "", "path to template file")
+	noteName := flag.String("name", "", "name of the new note")
+	open := flag.Bool("open", false, "open the note after creation")
+
 	flag.Parse()
 
 	if *templatePath == "" || *noteName == "" {
@@ -89,6 +108,22 @@ func parseFlags() (Template, string) {
 		TemplatePath: *templatePath,
 		NoteName: *noteName,
 		OpenEditor: *open,
+	}
+}
+
+func createNoteStruct(name string, absolutePath string) *Note {
+
+	path := Path { URI: absolutePath }
+	path = sanitizePath(path)
+
+	return &Note {
+		Name: name,
+		Path: path,
+	}
+}
+func sanitizePath(path Path) Path {
+	if strings.HasSuffix(path.URI, ".md") {
+		path.URI = strings.TrimSuffix(path.URI, ".md")
 	}
 
 	return path
